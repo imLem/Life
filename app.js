@@ -152,16 +152,14 @@ function getTable(m, n) {
             let s = new Date();
             console.log(getMatrix(width3) + '\n' + 'step: ' + step);
             i++;                    //  increment the counter
-            if (i < 81) {           //  if the counter < 10, call the loop function
+            if (i < 800) {           //  if the counter < 10, call the loop function
                 myLoop();             //  ..  again which will trigger another 
             }                       //  ..  setTimeout()
-        }, 100)
+        }, 1000)
     }
     myLoop();
 };
 //
-
-
 function getStartArr() {
     if (fileName) {
         let fs = require('fs');
@@ -197,8 +195,8 @@ function getStartArr() {
         getTable(m, n);
     };
 };
-let m = 7; //getRandomIntInclusive(5, 20);
-let n = 14; //getRandomIntInclusive(5, 20);
+let m = 30; //getRandomIntInclusive(5, 20);
+let n = 60; //getRandomIntInclusive(5, 20);
 let nodePath = process.argv[0];
 let appPath = process.argv[1];
 let fileName = process.argv[2];
