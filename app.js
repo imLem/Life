@@ -3,7 +3,7 @@ function getRandomIntInclusive(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min; //Максимум и минимум включаются
-};
+}
 // рефакторинг стиля доски для лучшего визуального восприятия, заменяет 1 и 0 на иные символы
 function getRef(result) {
     if (result === 1) {
@@ -11,23 +11,23 @@ function getRef(result) {
     } else {
         return '░';
     };
-};
+}
 // получает из массива визуальную матрицу
 function getMatrix(arr) {
-    let subwidth = [];
+    let subState = [];
     for (let i = 0; i < Math.ceil(arr.length / n); i++) {
-        subwidth[i] = arr.slice((i * n), (i * n) + n);
+        subState[i] = arr.slice((i * n), (i * n) + n);
     };
-    a = 0;
-    b = '';
-    c = '';
-    while (a < m) {
-        b = subwidth[a].join('');
-        c = c + '\n' + String(b);
-        a++;
+    let startIndex = 0; 
+    let matrixString = ''; 
+    let createMatrix = '';
+    while (startIndex < m) {
+        matrixString = subState[startIndex].join('');
+        createMatrix = createMatrix + '\n' + String(matrixString);
+        startIndex++;
     };
-    return c;
-};
+    return createMatrix;
+}
 // определение какой станет клетка в доске M x N
 function getAlive(z, arr) {
     let right = arr[z + 1];               //
@@ -88,7 +88,7 @@ function getAlive(z, arr) {
     };
 
     // отладочная часть
-    /*console.log('width[z] = ' + arr[z] + ' ' + 'z = ' + z + ' ' 
+    /*console.log('state[z] = ' + arr[z] + ' ' + 'z = ' + z + ' ' 
     + 'left = ' + left + ' ' + 'right = ' + right + ' ' + 'top = ' + top + ' ' + 'topLeft = ' + topLeft 
     + ' ' + 'topRight = ' + topRight + ' ' + 'bot = ' + bot + ' ' + 'botLeft = ' + botLeft + ' ' + 'botRight = ' + botRight);*/
 
@@ -115,51 +115,57 @@ function getAlive(z, arr) {
             return 0;
         };
     };
-};
+}
+// вспомогательная функция преобразования массива после определения живых и мертвых клеток
+function getPush(stateA, stateB) {
+    let startCount = 0;
+    while (startCount < stateA.length) {
+        stateB.push(getAlive(startCount, stateA));
+        startCount++;
+    }
+}
 // создание доски и последующие преобразование ее клеток
 function getTable(m, n) {
-    let width = startArr;
-    while (width.length < (m * n)) {
-        width.push(getRandomIntInclusive(0, 1));
+    let state = startArr;
+    while (state.length < (m * n)) {
+        state.push(getRandomIntInclusive(0, 1));
     };
-    let b = 0;
-    let width2 = [];
-    while (b < width.length) {
-        width2.push(getAlive(b, width));
-        b++;
-    };
-    let width3 = [];
-    width3 = width.map(item => getRef(item));
-    console.log(getMatrix(width3) + '\nstep: 1');
-    width3 = [];
-    width3 = width2.map(item => getRef(item));
-    console.log(getMatrix(width3) + '\nstep: 2');
-    let step = 2;
-    let i = 1;                  //  set your counter to 1
-    function myLoop() {         //  create a loop function
-        setTimeout(function () {   //  call a 3s setTimeout when the loop is called
-            width3 = [];
-            width = [];
-            width = [...width2];
-            width2 = [];
-            b = 0;
-            while (b < width.length) {
-                width2.push(getAlive(b, width));
-                b++;
-            };
-            width3 = width2.map(item => getRef(item));
-            step++
-            let s = new Date();
-            console.log(getMatrix(width3) + '\n' + 'step: ' + step);
-            i++;                    //  increment the counter
-            if (i < 800) {           //  if the counter < 10, call the loop function
-                myLoop();             //  ..  again which will trigger another 
-            }                       //  ..  setTimeout()
-        }, 1000)
+    
+    let stateClear = [];
+    let stateDirt = [];
+    let step = 1;
+    let i = 1;
+    
+    stateClear = state.map(item => getRef(item));
+    console.log(getMatrix(stateClear) + '\n' + 'step: ' + step);
+
+    function myLoop() {
+        setTimeout(function () {
+            if (step === 1) {
+                stateDirt = [];
+                getPush(state, stateDirt);
+                stateClear = stateDirt.map(item => getRef(item));
+                step++;
+                console.log(getMatrix(stateClear) + '\n' + 'step: ' + step);
+            } else {
+                state = [];
+                state = [...stateDirt];
+                stateDirt = [];
+                getPush(state, stateDirt);
+                stateClear = [];
+                stateClear = stateDirt.map(item => getRef(item));
+                step++;
+                console.log(getMatrix(stateClear) + '\n' + 'step: ' + step);
+            }
+            i++;
+            if (i < stepsMatrix) {
+                myLoop();
+            }
+        }, timeout)
     }
     myLoop();
-};
-//
+}
+// выбор стартового состояния доски
 function getStartArr() {
     if (fileName) {
         let fs = require('fs');
@@ -186,7 +192,7 @@ function getStartArr() {
         console.log(m);
         console.log(matrix1);
         i = 0;
-        while (i < matrix1.length){
+        while (i < matrix1.length) {
             startArr.push(matrix1[i]);
             i++;
         }
@@ -194,13 +200,11 @@ function getStartArr() {
     } else {
         getTable(m, n);
     };
-};
-let m = 30; //getRandomIntInclusive(5, 20);
-let n = 60; //getRandomIntInclusive(5, 20);
-let nodePath = process.argv[0];
-let appPath = process.argv[1];
+}
+let stepsMatrix = 200;
+let timeout = 70;
+let m = 15; //getRandomIntInclusive(5, 20);
+let n = 30; //getRandomIntInclusive(5, 20);
 let fileName = process.argv[2];
 let startArr = [];
-
-
 getStartArr();
